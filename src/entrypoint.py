@@ -1,5 +1,5 @@
 import modal
-from .FraudModel import tokenize_html
+from .FraudModel import tokenize_html, FraudDetectionModel
 
 app = modal.App()
 
@@ -24,11 +24,11 @@ whitelist = [
 
 blacklist = [
     'https://temu.bappenas.go.id',
+    "https://www.temu.com/"
 ]
 
 API_blacklist = [
     'https://temu.bappenas.go.id',
-    'https://google.com',
 ]
 
 check_list = ['cc-number', 'credit-card', 'cardnumber', 'card-number', 'ccn', 'ccnumber', 'cc_num', 'card_number', 'cardNumber']
@@ -42,8 +42,12 @@ def flask_app():
     import json
     import requests
     from bs4 import BeautifulSoup
-    
+    import torch
 
+    input_dim = 768
+    hidden_dim = 64  # You can adjust the hidden layer size
+
+    model = FraudDetectionModel(input_dim, hidden_dim)
 
     web_app = Flask(__name__)
     CORS(web_app)
@@ -136,9 +140,10 @@ def flask_app():
         if response.status_code == 200:
             return jsonify({"reason": "The website is doing fraude", "secure": False, "confidence_score": 100}), 200
                 
-        # Send the content of the website to the ML model for fraud detection
-        confidence_score = ML_fraud_detection(html_content)
-
+        # generate a fake embedding
+        embeddings = torch.randn(768)
+        confidence_score = model(embeddings)
+        confidence_score = confidence_score.item() * 100
         return jsonify({"reason": "Proceed it with your own risk", "secure": None, "confidence_score": confidence_score}), 200
 
         
@@ -158,8 +163,3 @@ def check_blacklistAPIs(url):
     if url in API_blacklist:
         return True
     return False
-
-def ML_fraud_detection(content):
-    # Use the ML model to detect fraud
-    
-    return confidence_score
