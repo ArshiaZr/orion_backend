@@ -1,0 +1,40 @@
+version: "3"
+services:
+  detector:
+    container_name: detector
+    build: .
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - mysql
+
+  mysql:
+    container_name: mysql
+    image: mariadb
+    restart: always
+    ports:
+      - "3306:3306"
+    env_file:
+      - .env
+    volumes:
+      - mydatabase:/var/lib/mysql
+
+  nginx:
+    container_name: nginx
+    image: jonasal/nginx-certbot
+    environment:
+      - CERTBOT_EMAIL=zrr.arshia@gmail.com
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - nginx_secrets:/etc/letsencrypt
+      - ./user_conf.d:/etc/nginx/user_conf.d
+    depends_on:
+      - detector
+
+volumes:
+  mydatabase:
+  nginx_secrets:
