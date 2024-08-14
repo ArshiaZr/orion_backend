@@ -24,7 +24,8 @@ whitelist = [
 
 blacklist = [
     'https://temu.bappenas.go.id',
-    "https://www.temu.com/"
+    "https://www.temu.com/",
+    "https://www.arshiazr.vercel.app"
 ]
 
 API_blacklist = [
