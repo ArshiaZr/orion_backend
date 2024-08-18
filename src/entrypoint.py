@@ -141,26 +141,37 @@ def flask_app():
         if response.status_code == 200:
             return jsonify({"reason": "The website is doing fraude", "secure": False, "confidence_score": 100}), 200
                 
-        # generate a fake embedding
-        embeddings = torch.randn(768)
-        confidence_score = model(embeddings)
-        confidence_score = confidence_score.item() * 100
-        return jsonify({"reason": "Proceed it with your own risk", "secure": None, "confidence_score": confidence_score}), 200
+        # generate embeddings
+        embeddings = tokenize_html(html_content)
+        # predict the fraud score
+        fraud_score = model(embeddings)
 
+        if(fraud_score.item() > 0.5):
+            confidence_score = fraud_score.item() * 100
+            return jsonify({"reason": "The website is doing fraude", "secure": False, "confidence_score": confidence_score}), 200
         
+        confidence_score = (1 - fraud_score.item()) * 100
+        return jsonify({"reason": "Proceed it with your own risk", "secure": True, "confidence_score": confidence_score}), 200
+    
     return web_app
 
 def check_whitelisted(url):
+    # Check if the URL is in the whitelist
+    # TODO: should retrieve the whitelist from the database
     if url in whitelist:
         return True
     return False
 
 def check_blacklisted(url):
+    # Check if the URL is in the blacklist
+    # TODO: should retrieve the blacklist from the database
     if url in blacklist:
         return True
     return False
 
 def check_blacklistAPIs(url):
+    # Check if the URL is in the blacklist
+    # TODO: should retrieve the blacklist from the database
     if url in API_blacklist:
         return True
     return False
